@@ -1,0 +1,24 @@
+server_port: 9512
+
+log_config:
+  log_level: INFO
+  log_path: ../log/sys.log
+  max_size: 10       # (MB)
+  max_age: 10        # (day)
+  max_backups: 1000
+  show_line: true
+  show_color: true
+  is_brief: false
+  json_format: false
+  log_in_console: false
+
+db_config:
+  user: root
+  password: 123456
+  ip: 127.0.0.1
+  port: 3306
+  dbname: ldbc_bcos
+
+
+
+
