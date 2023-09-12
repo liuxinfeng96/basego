@@ -1,11 +1,11 @@
 package main
 
 import (
-	"ldbc-bcos/src/config"
-	"ldbc-bcos/src/db"
-	"ldbc-bcos/src/logger"
-	"ldbc-bcos/src/router"
-	"ldbc-bcos/src/server"
+	"basego/src/config"
+	"basego/src/db"
+	"basego/src/logger"
+	"basego/src/router"
+	"basego/src/server"
 )
 
 func main() {

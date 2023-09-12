@@ -1,10 +1,10 @@
 package config
 
 import (
+	"basego/src/db"
+	"basego/src/logger"
 	"errors"
 	"flag"
-	"ldbc-bcos/src/db"
-	"ldbc-bcos/src/logger"
 
 	"github.com/spf13/viper"
 )

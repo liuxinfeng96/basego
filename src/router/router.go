@@ -1,11 +1,12 @@
 package router
 
 import (
+	"basego/src/handler"
+	"basego/src/logger"
+	"basego/src/server"
 	"errors"
+
 	"github.com/gin-gonic/gin"
-	"ldbc-bcos/src/handler"
-	"ldbc-bcos/src/logger"
-	"ldbc-bcos/src/server"
 )
 
 func LoadHttpHandlers(s *server.Server) error {

@@ -1,4 +1,4 @@
-module ldbc-bcos
+module basego
 
 go 1.19
 

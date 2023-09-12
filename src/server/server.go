@@ -1,11 +1,12 @@
 package server
 
 import (
+	"basego/src/config"
+	"basego/src/logger"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"ldbc-bcos/src/config"
-	"ldbc-bcos/src/logger"
 )
 
 type Server struct {

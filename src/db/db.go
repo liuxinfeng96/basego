@@ -1,8 +1,8 @@
 package db
 
 import (
+	"basego/src/logger"
 	"fmt"
-	"ldbc-bcos/src/logger"
 	"time"
 
 	"go.uber.org/zap"
