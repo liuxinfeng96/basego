@@ -7,16 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var HttpHandlerList = make([]Handler, 0)
-
-type Handler interface {
-	RouterGroup() string
-	RouterName() string
-	IsTokenVerify() bool
-	HttpMethod() string
-	Handle(s *server.Server) gin.HandlerFunc
-}
-
 func Cors() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
@@ -86,32 +76,15 @@ func FailedJSONResp(msg string, c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+type Handler interface {
+	Handle(s *server.Server) gin.HandlerFunc
+}
+
 type TestHandler struct {
-}
-
-func (th *TestHandler) RouterGroup() string {
-	return ""
-}
-
-func (th *TestHandler) RouterName() string {
-	return "test"
-}
-
-func (th *TestHandler) IsTokenVerify() bool {
-	return false
-}
-
-func (th *TestHandler) HttpMethod() string {
-	return "GET"
 }
 
 func (th *TestHandler) Handle(s *server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		SuccessfulJSONResp("Hello,World!", "", ctx)
 	}
-}
-
-func init() {
-	testHandler := new(TestHandler)
-	HttpHandlerList = append(HttpHandlerList, testHandler)
 }

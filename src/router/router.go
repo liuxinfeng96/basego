@@ -5,9 +5,21 @@ import (
 	"basego/src/logger"
 	"basego/src/server"
 	"errors"
-
-	"github.com/gin-gonic/gin"
 )
+
+// 路由注册表
+var routerList = []struct {
+	path          string
+	method        string
+	isTokenVerify bool
+	h             handler.Handler
+}{
+	// 测试接口
+	{"test", "GET", false, &handler.TestHandler{}},
+
+	// TODO 应用接口注册
+
+}
 
 func LoadHttpHandlers(s *server.Server) error {
 	s.GinEngine().Use(handler.Cors())
@@ -16,32 +28,25 @@ func LoadHttpHandlers(s *server.Server) error {
 	s.GinEngine().Use(logger.GinLogger(ginLogger))
 	s.GinEngine().Use(logger.GinRecovery(ginLogger, true))
 
-	for _, h := range handler.HttpHandlerList {
-		group := s.GinEngine().Group(h.RouterGroup())
-		err := loadRouterGroupHandler(group, h, s)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
+	for _, r := range routerList {
+		switch r.method {
+		case "POST":
+			if r.isTokenVerify {
+				s.GinEngine().POST(r.path, handler.JWTAuthMiddleware(), r.h.Handle(s))
+			} else {
+				s.GinEngine().POST(r.path, r.h.Handle(s))
+			}
 
-func loadRouterGroupHandler(routerGroup *gin.RouterGroup, h handler.Handler, s *server.Server) error {
-	switch h.HttpMethod() {
-	case "POST":
-		if h.IsTokenVerify() {
-			routerGroup.POST(h.RouterName(), handler.JWTAuthMiddleware(), h.Handle(s))
-		} else {
-			routerGroup.POST(h.RouterName(), h.Handle(s))
+		case "GET":
+			if r.isTokenVerify {
+				s.GinEngine().GET(r.path, handler.JWTAuthMiddleware(), r.h.Handle(s))
+			} else {
+				s.GinEngine().GET(r.path, r.h.Handle(s))
+			}
+
+		default:
+			return errors.New("unknown http request type")
 		}
-	case "GET":
-		if h.IsTokenVerify() {
-			routerGroup.GET(h.RouterName(), handler.JWTAuthMiddleware(), h.Handle(s))
-		} else {
-			routerGroup.GET(h.RouterName(), h.Handle(s))
-		}
-	default:
-		return errors.New("unknown http request type")
 	}
 	return nil
 }
