@@ -33,7 +33,7 @@ func (*UploadFileHandler) Handle(s *server.Server) gin.HandlerFunc {
 
 		fileId := uuid.New()
 
-		dirPath := path.Join(s.GetTmpFilePath(), fileId.String())
+		dirPath := path.Join(s.TmpFilePath(), fileId.String())
 
 		err = os.MkdirAll(dirPath, 0755)
 		if err != nil {

@@ -77,6 +77,6 @@ func (s *Server) SeverPort() string {
 	return s.config.ServerPort
 }
 
-func (s *Server) GetTmpFilePath() string {
+func (s *Server) TmpFilePath() string {
 	return s.config.TmpFilePath
 }

@@ -16,10 +16,9 @@ var routerList = []struct {
 }{
 	// 测试接口
 	{"test", "GET", false, &handler.TestHandler{}},
-	{"uploadFile", "GET", true, &handler.UploadFileHandler{}},
 
 	// TODO 应用接口注册
-
+	{"uploadFile", "GET", true, &handler.UploadFileHandler{}},
 }
 
 func LoadHttpHandlers(s *server.Server) error {

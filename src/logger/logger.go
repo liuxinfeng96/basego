@@ -100,10 +100,10 @@ func GetZapLogger(modelName ...string) (*zap.SugaredLogger, error) {
 	defer Logger.logMutex.Unlock()
 	var name string
 	for _, v := range modelName {
-		name += fmt.Sprintf("[%s]", v)
+		name += fmt.Sprintf("[@%s]", v)
 	}
 	if len(name) == 0 {
-		name = "[default]"
+		name = "[@default]"
 	}
 
 	zlog, ok := Logger.logCache.Get(name)
