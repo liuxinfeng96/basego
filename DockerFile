@@ -1,0 +1,15 @@
+FROM golang:1.19 as builder
+ENV GOPROXY=https://goproxy.cn,direct
+COPY ./src /basego/src
+COPY ./go.mod /basego/go.mod
+COPY ./go.sum /basego/go.sum
+RUN cd /basego/src && go build -o basego
+
+# FROM d3fk/nfs-client:v4
+FROM ubuntu:22.04
+# RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+# RUN apt-get update
+# RUN apt-get install nfs-common -y
+COPY --from=builder /basego/src/basego /basego/src/basego
+WORKDIR /basego
+VOLUME [ "/basego/log","/basego/conf","/basego/tmp"]

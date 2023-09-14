@@ -1,13 +1,11 @@
-server_port: 9512
+server_port: 9606
 
 log_config:
   log_level: INFO
   log_path: ../log/sys.log
-  max_size: 10       # (MB)
-  max_age: 10        # (day)
-  max_backups: 1000
+  max_age: 10
+  rotation_time: 24
   show_line: true
-  show_color: true
   is_brief: false
   json_format: false
   log_in_console: false
@@ -15,9 +13,11 @@ log_config:
 db_config:
   user: root
   password: 123456
-  ip: 127.0.0.1
-  port: 3306
-  dbname: ldbc_bcos
+  ip: 192.168.20.175
+  port: 33096
+  dbname: basego
+
+tmp_file_path: ../tmp
 
 
 

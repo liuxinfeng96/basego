@@ -17,7 +17,10 @@ func main() {
 
 	logBus := logger.NewLoggerBus(conf.LogConfig)
 
-	zlog := logBus.GetZapLogger("Gorm")
+	zlog, err := logBus.GetZapLogger("Gorm")
+	if err != nil {
+		panic(err)
+	}
 
 	gormDb, err := db.GormInit(conf.DBConfig, db.TableSlice, zlog)
 	if err != nil {
@@ -28,7 +31,7 @@ func main() {
 		server.WithConfig(conf),
 		server.WithGinEngin(),
 		server.WithGormDb(gormDb),
-		server.WithLog(&logBus),
+		server.WithLog(logBus),
 	)
 	if err != nil {
 		panic(err)

@@ -16,6 +16,7 @@ var routerList = []struct {
 }{
 	// 测试接口
 	{"test", "GET", false, &handler.TestHandler{}},
+	{"uploadFile", "GET", true, &handler.UploadFileHandler{}},
 
 	// TODO 应用接口注册
 
@@ -24,7 +25,11 @@ var routerList = []struct {
 func LoadHttpHandlers(s *server.Server) error {
 	s.GinEngine().Use(handler.Cors())
 
-	ginLogger := s.GetZapLogger("Gin")
+	ginLogger, err := s.GetZapLogger("Gin")
+	if err != nil {
+		return err
+	}
+
 	s.GinEngine().Use(logger.GinLogger(ginLogger))
 	s.GinEngine().Use(logger.GinRecovery(ginLogger, true))
 

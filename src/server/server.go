@@ -61,7 +61,7 @@ func (s *Server) Start() error {
 	return nil
 }
 
-func (s *Server) GetZapLogger(name ...string) *zap.SugaredLogger {
+func (s *Server) GetZapLogger(name ...string) (*zap.SugaredLogger, error) {
 	return s.logBus.GetZapLogger(name...)
 }
 
@@ -75,4 +75,8 @@ func (s *Server) Db() *gorm.DB {
 
 func (s *Server) SeverPort() string {
 	return s.config.ServerPort
+}
+
+func (s *Server) GetTmpFilePath() string {
+	return s.config.TmpFilePath
 }

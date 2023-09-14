@@ -1,16 +1,19 @@
 package logger
 
 import (
+	rotatelogs "basego/src/logger/file-rotatelogs"
 	"errors"
 	"fmt"
-	"github.com/golang/groupcache/lru"
+	"io"
+	"os"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/golang/groupcache/lru"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 // 日志级别，配置文件定义的常量
@@ -24,16 +27,16 @@ const (
 const (
 	DefaultLogPath = "./log/sys.log"
 
-	// DefaultLogMaxSize 默认日志文件切割大小
-	DefaultLogMaxSize = 10
-
 	// DefaultLogMaxAge 默认最大保留天数
 	DefaultLogMaxAge = 30
 
-	// DefaultLogMaxBackups 默认保留日志文件的最大数量
-	DefaultLogMaxBackups = 1000
-
 	DefaultLogLevel = INFO
+
+	// DefaultLogRotationTime 日志滚动时间（小时）
+	DefaultLogRotationTime = 24
+
+	// DefaultLogRotationSize 日志滚动大小（MB）暂时不用
+	DefaultLogRotationSize = 100
 )
 
 // LogConfig 日志记录的配置
@@ -49,14 +52,9 @@ type LogConfig struct {
 	// based on age.
 	MaxAge int `mapstructure:"max_age"`
 
-	// MaxSize is the maximum size in megabytes of the log file before it gets
-	// rotated. It defaults to 100 megabytes.
-	MaxSize int `mapstructure:"max_size"`
+	RotationTime int `mapstructure:"rotation_time"`
 
-	// MaxBackups is the maximum number of old log files to retain.  The default
-	// is to retain all old log files (though MaxAge may still cause them to get
-	// deleted.)
-	MaxBackups int `mapstructure:"max_backups"`
+	RotationSize int64 `mapstructure:"rotation_size"`
 
 	// jsonFormat: log file use json format
 	JsonFormat bool `mapstructure:"json_format"`
@@ -66,9 +64,6 @@ type LogConfig struct {
 
 	// logInConsole: show logs in console at the same time
 	LogInConsole bool `mapstructure:"log_in_console"`
-
-	// if true, show color log
-	ShowColor bool `mapstructure:"show_color"`
 
 	// if true, only show log, won't print log level、caller func and line
 	IsBrief bool `mapstructure:"is_brief"`
@@ -84,23 +79,23 @@ type LoggerBus struct {
 	logCache  *lru.Cache
 }
 
-var Logger LoggerBus
+var Logger *LoggerBus
 
-func NewLoggerBus(config *LogConfig) LoggerBus {
+func NewLoggerBus(config *LogConfig) *LoggerBus {
 	var lb LoggerBus
 
 	lb.logConfig = config
 	lb.logMutex = sync.Mutex{}
 	lb.logCache = lru.New(1024)
 
-	return lb
+	return &lb
 }
 
 func SetLogConfig(config *LogConfig) {
 	Logger = NewLoggerBus(config)
 }
 
-func GetZapLogger(modelName ...string) *zap.SugaredLogger {
+func GetZapLogger(modelName ...string) (*zap.SugaredLogger, error) {
 	Logger.logMutex.Lock()
 	defer Logger.logMutex.Unlock()
 	var name string
@@ -113,35 +108,42 @@ func GetZapLogger(modelName ...string) *zap.SugaredLogger {
 
 	zlog, ok := Logger.logCache.Get(name)
 	if !ok {
-		log := initLogger(Logger.logConfig, name)
-		Logger.logCache.Add(name, zlog)
-		return log
+		log, err := initLogger(Logger.logConfig, name)
+		if err != nil {
+			return nil, err
+		}
+		Logger.logCache.Add(name, log)
+		return log, nil
 	}
 
 	log := zlog.(*zap.SugaredLogger)
-	return log
+	return log, nil
 }
 
-func (l *LoggerBus) GetZapLogger(modelName ...string) *zap.SugaredLogger {
+func (l *LoggerBus) GetZapLogger(modelName ...string) (*zap.SugaredLogger, error) {
 	l.logMutex.Lock()
 	defer l.logMutex.Unlock()
 	var name string
 	for _, v := range modelName {
-		name += fmt.Sprintf("[%s]", v)
+		name += fmt.Sprintf("[@%s]", v)
 	}
 	if len(name) == 0 {
-		name = "[default]"
+		name = "[@default]"
 	}
 
 	zlog, ok := l.logCache.Get(name)
 	if !ok {
-		log := initLogger(l.logConfig, name)
-		l.logCache.Add(name, zlog)
-		return log
+		log, err := initLogger(l.logConfig, name)
+		if err != nil {
+			return nil, err
+		}
+
+		l.logCache.Add(name, log)
+		return log, nil
 	}
 
 	log := zlog.(*zap.SugaredLogger)
-	return log
+	return log, nil
 }
 
 func checkLogConfig(logConf *LogConfig) {
@@ -154,15 +156,15 @@ func checkLogConfig(logConf *LogConfig) {
 	if logConf.MaxAge == 0 {
 		logConf.MaxAge = DefaultLogMaxAge
 	}
-	if logConf.MaxSize == 0 {
-		logConf.MaxSize = DefaultLogMaxSize
+	if logConf.RotationTime == 0 {
+		logConf.RotationTime = DefaultLogRotationTime
 	}
-	if logConf.MaxBackups == 0 {
-		logConf.MaxBackups = DefaultLogMaxBackups
+	if logConf.RotationSize == 0 {
+		logConf.RotationTime = DefaultLogRotationSize
 	}
 }
 
-func getZapLevel(lvl string) (*zapcore.Level, error) {
+func getZapLevel(lvl string) (*zap.AtomicLevel, error) {
 	var zapLevel zapcore.Level
 	switch strings.ToUpper(lvl) {
 	case ERROR:
@@ -176,40 +178,41 @@ func getZapLevel(lvl string) (*zapcore.Level, error) {
 	default:
 		return nil, errors.New("invalid log level")
 	}
-	return &zapLevel, nil
+	aLevel := zap.NewAtomicLevel()
+	aLevel.SetLevel(zapLevel)
+
+	return &aLevel, nil
 }
 
-func getLogWriter(fileName string, maxSize, maxBackup, maxAge int) zapcore.WriteSyncer {
-	lumberJackLogger := &lumberjack.Logger{
-		Filename:   fileName,
-		MaxSize:    maxSize,
-		MaxBackups: maxBackup,
-		MaxAge:     maxAge,
-	}
-	return zapcore.AddSync(lumberJackLogger)
-}
-
-func initLogger(logConfig *LogConfig, name string) *zap.SugaredLogger {
+func initLogger(logConfig *LogConfig, name string) (*zap.SugaredLogger, error) {
 
 	checkLogConfig(logConfig)
-	writeSyncer := getLogWriter(logConfig.LogPath, logConfig.MaxSize, logConfig.MaxBackups, logConfig.MaxAge)
+
+	hook, err := getHook(logConfig.LogPath, logConfig.MaxAge, logConfig.RotationTime)
+	if err != nil {
+		return nil, err
+	}
 
 	level, err := getZapLevel(logConfig.LogLevel)
 	if err != nil {
 		level, _ = getZapLevel(DefaultLogLevel)
 	}
 
-	if len(name) == 0 {
-		name = "[default]"
+	var syncer zapcore.WriteSyncer
+	syncers := []zapcore.WriteSyncer{zapcore.AddSync(hook)}
+	if logConfig.LogInConsole {
+		syncers = append(syncers, zapcore.AddSync(os.Stdout))
 	}
 
-	logger := newLogger(logConfig, level, writeSyncer).Named(name)
+	syncer = zapcore.NewMultiWriteSyncer(syncers...)
+
+	logger := newLogger(logConfig, level, syncer).Named(name)
 	sugaredLogger := logger.Sugar()
 
-	return sugaredLogger
+	return sugaredLogger, nil
 }
 
-func newLogger(logConfig *LogConfig, level *zapcore.Level, writeSyncer zapcore.WriteSyncer) *zap.Logger {
+func newLogger(logConfig *LogConfig, level *zap.AtomicLevel, writeSyncer zapcore.WriteSyncer) *zap.Logger {
 
 	var encoderConfig zapcore.EncoderConfig
 	if logConfig.IsBrief {
@@ -249,20 +252,36 @@ func newLogger(logConfig *LogConfig, level *zapcore.Level, writeSyncer zapcore.W
 		level,
 	)
 
-	logger := zap.New(core)
-
-	defer func(logger *zap.Logger) {
-		_ = logger.Sync()
-	}(logger)
+	l := zap.New(core)
 
 	if logConfig.ShowLine {
-		logger = logger.WithOptions(zap.AddCaller())
+		l = l.WithOptions(zap.AddCaller())
 	}
+
 	if lvl, err := getZapLevel(logConfig.StackTraceLevel); err == nil {
-		logger = logger.WithOptions(zap.AddStacktrace(lvl))
+		l = l.WithOptions(zap.AddStacktrace(lvl))
 	}
-	logger = logger.WithOptions(zap.AddCallerSkip(1))
-	return logger
+
+	l = l.WithOptions(zap.AddCallerSkip(2))
+	return l
+}
+
+func getHook(filename string, maxAge, rotationTime int) (io.Writer, error) {
+
+	hook, err := rotatelogs.New(
+		filename+".%Y%m%d%H",
+		rotatelogs.WithRotationTime(time.Hour*time.Duration(rotationTime)),
+		//filename+".%Y%m%d%H%M",
+		// rotatelogs.WithRotationSize(rotationSize*ROTATION_SIZE_MB),
+		rotatelogs.WithLinkName(filename),
+		rotatelogs.WithMaxAge(time.Hour*24*time.Duration(maxAge)),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return hook, nil
 }
 
 // CustomLevelEncoder 自定义日志级别的输出格式

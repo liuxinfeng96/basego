@@ -10,12 +10,16 @@ import (
 )
 
 type Config struct {
-	ServerPort string            `mapstructure:"server_port"`
-	LogConfig  *logger.LogConfig `mapstructure:"log_config"`
-	DBConfig   *db.DBConfig      `mapstructure:"db_config"`
+	ServerPort  string            `mapstructure:"server_port"`
+	LogConfig   *logger.LogConfig `mapstructure:"log_config"`
+	DBConfig    *db.DBConfig      `mapstructure:"db_config"`
+	TmpFilePath string            `mapstructure:"tmp_file_path"`
 }
 
-const DefaultServerPort = "9512"
+const (
+	DefaultServerPort  = "9606"
+	DefaultTmpFilePath = "../tmp"
+)
 
 // GetFlagPath --Specify the path and name of the configuration file (flag)
 func GetFlagPath() string {
@@ -58,5 +62,10 @@ func InitConfig(configPath string) (*Config, error) {
 	if len(conf.ServerPort) == 0 {
 		conf.ServerPort = DefaultServerPort
 	}
+
+	if len(conf.TmpFilePath) == 0 {
+		conf.TmpFilePath = DefaultTmpFilePath
+	}
+
 	return &conf, nil
 }
