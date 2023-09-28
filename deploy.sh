@@ -40,19 +40,20 @@ fi
 
 echo "start the server..."
 docker run -d \
--p 9606:9606 \
--w /basego \
--v $path/conf:/basego/conf \
--v $path/log:/basego/log \
--v $path/tmp:/basego/tmp \
--m 1024M \
---memory-swap 2048M \
---cpus 2 \
---name basego-server \
---restart always \
---privileged \
-basego-server:v1.0.0 \
-bash -c "cd src && ./basego -config ../conf/config.yaml"
+    -p 9606:9606 \
+    -w /basego \
+    -v $path/conf:/basego/conf \
+    -v $path/log:/basego/log \
+    -v $path/tmp:/basego/tmp \
+    -m 1024M \
+    --net=host \
+    --memory-swap 2048M \
+    --cpus 2 \
+    --name basego-server \
+    --restart always \
+    --privileged \
+    basego-server:v1.0.0 \
+    bash -c "cd src && ./basego -config ../conf/config.yaml"
 sleep 2s
 docker logs basego-server
 echo "the server has been started!"

@@ -13,7 +13,7 @@ log_config:
 db_config:
   user: root
   password: 123456
-  ip: 192.168.20.175
+  ip: 127.0.0.1
   port: 33096
   dbname: basego
 
