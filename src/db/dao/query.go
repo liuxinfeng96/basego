@@ -17,7 +17,8 @@ func QueryObjectList(gormDb *gorm.DB, object db.DbModel, page, pageSize int32,
 
 	offset := (page - 1) * pageSize
 
-	querySub := gormDb.Model(object).Limit(int(pageSize)).Offset(int(offset)).Order("id desc")
+	querySub := gormDb.Model(object).Select("id").
+		Limit(int(pageSize)).Offset(int(offset)).Order("id desc")
 
 	if qc != nil {
 		for i := 0; i < len(qc); i++ {
@@ -27,12 +28,7 @@ func QueryObjectList(gormDb *gorm.DB, object db.DbModel, page, pageSize int32,
 		}
 	}
 
-	sqlRow, err = querySub.Rows()
-	if err != nil {
-		return
-	}
-
-	return
+	return gormDb.Model(object).Order("id desc").Joins("INNER JOIN (?) AS t2 USING (id)", querySub).Rows()
 }
 
 func QueryObjectListTotal(gormDb *gorm.DB, object db.DbModel,
