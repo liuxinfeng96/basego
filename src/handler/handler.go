@@ -48,6 +48,7 @@ const (
 	RespCodeFailed  = 500
 )
 
+// SuccessfulJSONResp gin成功返回数据包装（不带分页）
 func SuccessfulJSONResp(data interface{}, msg string, c *gin.Context) {
 	resp := StandardResp{
 		Code: RespCodeSuccess,
@@ -57,6 +58,7 @@ func SuccessfulJSONResp(data interface{}, msg string, c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+// SuccessfulJSONRespWithPage gin成功返回数据包装（带分页）
 func SuccessfulJSONRespWithPage(data interface{}, total int64, c *gin.Context) {
 	resp := StandardRespWithPage{
 		StandardResp: StandardResp{
@@ -68,6 +70,7 @@ func SuccessfulJSONRespWithPage(data interface{}, total int64, c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+// FailedJSONResp gin失败返回数据包装
 func FailedJSONResp(msg string, c *gin.Context) {
 	resp := StandardResp{
 		Code: RespCodeFailed,
@@ -76,10 +79,12 @@ func FailedJSONResp(msg string, c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+// Handler gin业务处理器
 type Handler interface {
 	Handle(s *server.Server) gin.HandlerFunc
 }
 
+// TestHandler 测试处理器
 type TestHandler struct {
 }
 
@@ -98,4 +103,8 @@ const (
 
 	RespMsgServerError    = "内部服务错误，请检查日志！"
 	RespMsgLogServerError = "日志服务错误，请检查日志！"
+
+	RespMsgTokenError = "获取Token失败！"
+
+	RespMsgOperationSuccess = "操作成功！"
 )

@@ -21,6 +21,7 @@ var routerList = []struct {
 	{"uploadFile", "GET", true, &handler.UploadFileHandler{}},
 }
 
+// LoadHttpHandlers 路由通用加载
 func LoadHttpHandlers(s *server.Server) error {
 	s.GinEngine().Use(handler.Cors())
 

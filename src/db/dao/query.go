@@ -7,11 +7,16 @@ import (
 	"gorm.io/gorm"
 )
 
+// QueryCondition 通用查询条件
 type QueryCondition struct {
+	// 查询条件列名称
 	Column string
-	Input  interface{}
+	// 查询条件输入
+	Input interface{}
 }
 
+// QueryObjectList 列表查询带分页
+// 返回sqlRows,根据业务解析
 func QueryObjectList(gormDb *gorm.DB, object db.DbModel, page, pageSize int32,
 	qc ...*QueryCondition) (sqlRow *sql.Rows, err error) {
 
@@ -31,6 +36,8 @@ func QueryObjectList(gormDb *gorm.DB, object db.DbModel, page, pageSize int32,
 	return gormDb.Model(object).Order("id desc").Joins("INNER JOIN (?) AS t2 USING (id)", querySub).Rows()
 }
 
+// QueryObjectListTotal 列表查询分页求总数
+// 传入通道，为了效率并发操作
 func QueryObjectListTotal(gormDb *gorm.DB, object db.DbModel,
 	totalChan chan int64, qc ...*QueryCondition) {
 
@@ -52,6 +59,21 @@ func QueryObjectListTotal(gormDb *gorm.DB, object db.DbModel,
 
 }
 
+// QueryObjectListByCondition 列表查询不带分页
+// 返回sqlRows,根据业务解析
+func QueryObjectListByCondition(gormDb *gorm.DB, object db.DbModel,
+	conditions ...*QueryCondition) (*sql.Rows, error) {
+
+	db := gormDb.Model(object)
+
+	for _, c := range conditions {
+		db = db.Where(c.Column+" = ?", c.Input)
+	}
+
+	return db.Rows()
+}
+
+// QueryObjectByCondition 单条查询，无数据报错
 func QueryObjectByCondition(gormDb *gorm.DB, object db.DbModel,
 	conditions ...*QueryCondition) error {
 

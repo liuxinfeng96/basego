@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// InsertObjectsToDBInTransaction 多模型/多条数据入库，符合事务逻辑
 func InsertObjectsToDBInTransaction(gormDb *gorm.DB, objects []db.DbModel) error {
 	tx := gormDb.Begin()
 	defer func() {
@@ -28,6 +29,7 @@ func InsertObjectsToDBInTransaction(gormDb *gorm.DB, objects []db.DbModel) error
 	return tx.Commit().Error
 }
 
+// InsertOneObjectToDB 单条数据入库
 func InsertOneObjectToDB(object db.DbModel, gormDb *gorm.DB) error {
 	if err := gormDb.Create(object).Error; err != nil {
 		return err

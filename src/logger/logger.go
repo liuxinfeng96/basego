@@ -95,6 +95,7 @@ func SetLogConfig(config *LogConfig) {
 	Logger = NewLoggerBus(config)
 }
 
+// GetZapLogger 创建/获取模块日志对象
 func GetZapLogger(modelName ...string) (*zap.SugaredLogger, error) {
 	Logger.logMutex.Lock()
 	defer Logger.logMutex.Unlock()
@@ -120,6 +121,7 @@ func GetZapLogger(modelName ...string) (*zap.SugaredLogger, error) {
 	return log, nil
 }
 
+// GetZapLogger 创建/获取模块日志对象
 func (l *LoggerBus) GetZapLogger(modelName ...string) (*zap.SugaredLogger, error) {
 	l.logMutex.Lock()
 	defer l.logMutex.Unlock()
