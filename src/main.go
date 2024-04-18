@@ -1,10 +1,10 @@
 package main
 
 import (
+	"basego/src/api"
 	"basego/src/config"
 	"basego/src/db"
 	"basego/src/logger"
-	"basego/src/router"
 	"basego/src/server"
 )
 
@@ -37,7 +37,7 @@ func main() {
 		panic(err)
 	}
 
-	err = router.LoadHttpHandlers(s)
+	err = api.LoadHttpHandlers(s)
 	if err != nil {
 		panic(err)
 	}
