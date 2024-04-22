@@ -2,7 +2,9 @@ package server
 
 import (
 	"basego/src/config"
+	"basego/src/db"
 	"basego/src/logger"
+	"context"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -10,6 +12,7 @@ import (
 )
 
 type Server struct {
+	ctx       context.Context
 	logBus    *logger.LoggerBus
 	ginEngine *gin.Engine
 	config    *config.Config
@@ -36,9 +39,9 @@ func WithLog(logBus *logger.LoggerBus) Option {
 	}
 }
 
-func WithGormDb(db *gorm.DB) Option {
+func WithContext(ctx context.Context) Option {
 	return func(s *Server) {
-		s.gormDb = db
+		s.ctx = ctx
 	}
 }
 
@@ -52,11 +55,19 @@ func NewServer(opts ...Option) (*Server, error) {
 }
 
 func (s *Server) Start() error {
-
-	err := s.GinEngine().Run(":" + s.SeverPort())
+	zlog, err := s.logBus.GetZapLogger("Gorm")
 	if err != nil {
 		return err
 	}
+
+	gormDb, err := db.GormInit(s.config.DBConfig, db.TableSlice, zlog)
+	if err != nil {
+		return err
+	}
+
+	s.gormDb = gormDb
+
+	go s.GinEngine().Run(":" + s.SeverPort())
 
 	return nil
 }

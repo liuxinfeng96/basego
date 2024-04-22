@@ -3,9 +3,12 @@ package main
 import (
 	"basego/src/api"
 	"basego/src/config"
-	"basego/src/db"
 	"basego/src/logger"
 	"basego/src/server"
+	"context"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -17,20 +20,12 @@ func main() {
 
 	logBus := logger.NewLoggerBus(conf.LogConfig)
 
-	zlog, err := logBus.GetZapLogger("Gorm")
-	if err != nil {
-		panic(err)
-	}
-
-	gormDb, err := db.GormInit(conf.DBConfig, db.TableSlice, zlog)
-	if err != nil {
-		panic(err)
-	}
+	context, cancel := context.WithCancel(context.Background())
 
 	s, err := server.NewServer(
 		server.WithConfig(conf),
 		server.WithGinEngin(),
-		server.WithGormDb(gormDb),
+		server.WithContext(context),
 		server.WithLog(logBus),
 	)
 	if err != nil {
@@ -46,4 +41,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	// 捕捉系统quit信号
+	defer func() {
+		cancel()
+	}()
+
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGTERM, syscall.SIGINT)
+	<-signals
 }
