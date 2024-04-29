@@ -45,6 +45,7 @@ docker run -d \
     -v $path/conf:/basego/conf \
     -v $path/log:/basego/log \
     -v $path/tmp:/basego/tmp \
+    -e TZ=Asia/Shanghai \
     -m 1024M \
     --net=host \
     --memory-swap 2048M \

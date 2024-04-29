@@ -11,5 +11,6 @@ FROM ubuntu:22.04
 # RUN apt-get update
 # RUN apt-get install nfs-common -y
 COPY --from=builder /basego/src/basego /basego/src/basego
+ENV TZ=Asia/Shanghai
 WORKDIR /basego
 VOLUME [ "/basego/log","/basego/conf","/basego/tmp"]
