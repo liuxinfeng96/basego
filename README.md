@@ -31,5 +31,8 @@ db_config:
 在项目主目录下，运行部署脚本：
 
 ```shell
-$ ./deploy.sh
+$ ./deploy.sh [version]
 ```
+
+-- version: 镜像版本
+
