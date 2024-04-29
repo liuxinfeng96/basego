@@ -264,7 +264,7 @@ func newLogger(logConfig *LogConfig, level *zap.AtomicLevel, writeSyncer zapcore
 		l = l.WithOptions(zap.AddStacktrace(lvl))
 	}
 
-	l = l.WithOptions(zap.AddCallerSkip(2))
+	// l = l.WithOptions(zap.AddCallerSkip(2))
 	return l
 }
 

@@ -96,13 +96,8 @@ func (th *TestHandler) Handle(s *server.Server) gin.HandlerFunc {
 
 const (
 	RespMsgParamsTypeError = "错误的参数类型！"
-	RespMsgParamsMissing   = "缺少必须参数！"
 
-	RespMsgDBQueryError   = "查询数据异常，请检查日志！"
-	RespMsgDBStorageError = "存储数据异常，请检查日志！"
-
-	RespMsgServerError    = "内部服务错误，请检查日志！"
-	RespMsgLogServerError = "日志服务错误，请检查日志！"
+	RespMsgParamsMissing = "缺少必须参数！"
 
 	RespMsgTokenError = "获取Token失败！"
 

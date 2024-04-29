@@ -19,7 +19,6 @@ var routerList = []struct {
 	{"test", "GET", false, &handler.TestHandler{}},
 
 	// TODO 应用接口注册
-	{"uploadFile", "GET", true, &handler.UploadFileHandler{}},
 }
 
 // LoadHttpHandlers 路由通用加载
