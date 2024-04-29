@@ -12,5 +12,11 @@ FROM ubuntu:22.04
 # RUN apt-get install nfs-common -y
 COPY --from=builder /basego/src/basego /basego/src/basego
 ENV TZ=Asia/Shanghai
+RUN echo "${TZ}" > /etc/timezone \ 
+&& ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime \ 
+&& apt update \ 
+&& apt install -y tzdata \ 
+&& rm -rf /var/lib/apt/lists/*
+
 WORKDIR /basego
 VOLUME [ "/basego/log","/basego/conf","/basego/tmp"]
