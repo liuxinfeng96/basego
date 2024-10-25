@@ -55,17 +55,18 @@ func NewServer(opts ...Option) (*Server, error) {
 }
 
 func (s *Server) Start() error {
-	zlog, err := s.logBus.GetZapLogger("Gorm")
+	zlog, err := s.logBus.GetZapLogger("mysql")
 	if err != nil {
 		return err
 	}
 
-	gormDb, err := db.GormInit(s.config.DBConfig, db.TableSlice, zlog)
+	mysqlDb, err := db.MysqlInit(s.config.MysqlConfig, s.config.GormConfig,
+		db.TableSlice, zlog)
 	if err != nil {
 		return err
 	}
 
-	s.gormDb = gormDb
+	s.gormDb = mysqlDb
 
 	go s.GinEngine().Run(":" + s.SeverPort())
 
@@ -86,8 +87,4 @@ func (s *Server) Db() *gorm.DB {
 
 func (s *Server) SeverPort() string {
 	return s.config.ServerPort
-}
-
-func (s *Server) TmpFilePath() string {
-	return s.config.TmpFilePath
 }

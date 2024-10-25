@@ -5,21 +5,25 @@ import (
 	"basego/src/logger"
 	"errors"
 	"flag"
+	"fmt"
+	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 )
 
 type Config struct {
 	ServerPort  string            `mapstructure:"server_port"`
 	LogConfig   *logger.LogConfig `mapstructure:"log_config"`
-	DBConfig    *db.DBConfig      `mapstructure:"db_config"`
-	TmpFilePath string            `mapstructure:"tmp_file_path"`
+	MysqlConfig *db.MysqlConfig   `mapstructure:"mysql"`
+	GormConfig  *db.GormConfig    `mapstructure:"gorm_config"`
 }
 
 const (
-	DefaultServerPort  = "9606"
-	DefaultTmpFilePath = "../tmp"
+	DefaultServerPort = "9606"
 )
+
+var configLastChangeTime time.Time
 
 // GetFlagPath --Specify the path and name of the configuration file (flag)
 func GetFlagPath() string {
@@ -51,20 +55,34 @@ func InitConfig(configPath string) (*Config, error) {
 		return nil, err
 	}
 
+	v.WatchConfig()
+
+	v.OnConfigChange(func(changeEvent fsnotify.Event) {
+		if time.Since(configLastChangeTime).Seconds() >= 1 {
+			if changeEvent.Op.String() == "WRITE" {
+				configLastChangeTime = time.Now()
+				err := viper.Unmarshal(&conf)
+				if err != nil {
+					fmt.Printf("the config hot update failed: [%s]\n", err.Error())
+				}
+			}
+		}
+	})
+
 	if conf.LogConfig == nil {
 		conf.LogConfig = new(logger.LogConfig)
 	}
 
-	if conf.DBConfig == nil {
-		return nil, errors.New("not found the db config")
+	if conf.MysqlConfig == nil {
+		return nil, errors.New("not found the mysql config")
+	}
+
+	if conf.GormConfig == nil {
+		return nil, errors.New("not found the gorm config")
 	}
 
 	if len(conf.ServerPort) == 0 {
 		conf.ServerPort = DefaultServerPort
-	}
-
-	if len(conf.TmpFilePath) == 0 {
-		conf.TmpFilePath = DefaultTmpFilePath
 	}
 
 	return &conf, nil
