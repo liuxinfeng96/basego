@@ -1,7 +1,7 @@
 package logger
 
 import (
-	rotatelogs "basego/src/logger/file-rotatelogs"
+	rotatelogs "basego/logger/file-rotatelogs"
 	"errors"
 	"fmt"
 	"io"

@@ -1,7 +1,7 @@
 package db
 
 import (
-	"basego/src/logger"
+	"basego/logger"
 	"fmt"
 	"time"
 

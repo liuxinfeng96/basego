@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package rotatelogs
 
 import (
-	"basego/src/logger/file-rotatelogs/internal/option"
+	"basego/logger/file-rotatelogs/internal/option"
 	"time"
 )
 

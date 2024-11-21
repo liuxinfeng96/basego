@@ -1,7 +1,7 @@
 package dao
 
 import (
-	"basego/src/db"
+	"basego/db"
 	"database/sql"
 
 	"gorm.io/gorm"

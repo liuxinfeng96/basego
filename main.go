@@ -1,10 +1,10 @@
 package main
 
 import (
-	"basego/src/api"
-	"basego/src/config"
-	"basego/src/logger"
-	"basego/src/server"
+	"basego/api"
+	"basego/config"
+	"basego/logger"
+	"basego/server"
 	"context"
 	"os"
 	"os/signal"
@@ -20,12 +20,10 @@ func main() {
 
 	logBus := logger.NewLoggerBus(conf.LogConfig)
 
-	context, cancel := context.WithCancel(context.Background())
-
 	s, err := server.NewServer(
 		server.WithConfig(conf),
 		server.WithGinEngin(),
-		server.WithContext(context),
+		server.WithContext(context.Background()),
 		server.WithLog(logBus),
 	)
 	if err != nil {
@@ -42,12 +40,14 @@ func main() {
 		panic(err)
 	}
 
-	// 捕捉系统quit信号
-	defer func() {
-		cancel()
-	}()
-
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGTERM, syscall.SIGINT)
 	<-signals
+
+	err = s.Stop()
+	if err != nil {
+		s.SysLog().Error("server stop err: %s", err.Error())
+	}
+
+	s.SysLog().Info("the service exits normally")
 }

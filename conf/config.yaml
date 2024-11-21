@@ -2,7 +2,7 @@ server_port: 9606
 
 log_config:
   log_level: INFO
-  log_path: ../log/sys.log
+  log_path: ./log/sys.log
   max_age: 10
   rotation_time: 24
   show_line: true

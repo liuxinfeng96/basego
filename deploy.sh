@@ -54,7 +54,7 @@ docker run -d \
     --restart always \
     --privileged \
     basego-server:$version \
-    bash -c "cd src && ./basego -config ../conf/config.yaml"
+    bash -c "./basego -config ./conf/config.yaml"
 sleep 2s
 docker logs basego-server-$version
 echo "the server has been started!"

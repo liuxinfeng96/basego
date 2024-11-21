@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"basego/src/server"
+	"basego/server"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

@@ -1,8 +1,8 @@
 package config
 
 import (
-	"basego/src/db"
-	"basego/src/logger"
+	"basego/db"
+	"basego/logger"
 	"errors"
 	"flag"
 	"fmt"
@@ -28,7 +28,7 @@ var configLastChangeTime time.Time
 // GetFlagPath --Specify the path and name of the configuration file (flag)
 func GetFlagPath() string {
 	var configPath string
-	flag.StringVar(&configPath, "config", "../conf/config.yaml", "please input the system config file path")
+	flag.StringVar(&configPath, "config", "./conf/config.yaml", "please input the system config file path")
 	flag.Parse()
 	return configPath
 }

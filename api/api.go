@@ -1,9 +1,9 @@
 package api
 
 import (
-	"basego/src/handler"
-	"basego/src/logger"
-	"basego/src/server"
+	"basego/handler"
+	"basego/logger"
+	"basego/server"
 
 	"errors"
 )
