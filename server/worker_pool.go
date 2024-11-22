@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/panjf2000/ants/v2"
 	"go.uber.org/zap"
 )
 
@@ -15,22 +14,15 @@ type WorkerPool struct {
 	ctx     context.Context                      // 全文的上下文
 	cancel  context.CancelFunc                   // 取消函数
 	stopped bool                                 // 标识worker pool是否已经停止
-	pool    *ants.Pool
 	log     *zap.SugaredLogger
 }
 
 // 初始化worker pool
-func NewWorkerPool(ctx context.Context, size int,
+func NewWorkerPool(ctx context.Context,
 	log *zap.SugaredLogger) (*WorkerPool, error) {
 	w := &WorkerPool{
 		tasks: make(chan func(ctx context.Context) error, 256),
 		log:   log,
-	}
-
-	var err error
-	w.pool, err = ants.NewPool(int(size))
-	if err != nil {
-		return nil, err
 	}
 
 	w.ctx, w.cancel = context.WithCancel(ctx)
@@ -47,15 +39,11 @@ func (wp *WorkerPool) Start() {
 				return
 			}
 
-			err := ants.Submit(func() {
-				wp.wg.Add(1)
+			wp.wg.Add(1)
+			go func(f func(ctx context.Context) error) {
 				defer wp.wg.Done()
-				task(wp.ctx)
-			})
-			if err != nil {
-				wp.log.Errorf("ants submit err: %s\n", err.Error())
-				return
-			}
+				_ = f(wp.ctx)
+			}(task)
 		}
 	}()
 }

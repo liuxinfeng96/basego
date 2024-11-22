@@ -60,7 +60,7 @@ func NewServer(opts ...Option) (*Server, error) {
 		return nil, err
 	}
 
-	server.workerPool, err = NewWorkerPool(server.ctx, 1024, wpLog)
+	server.workerPool, err = NewWorkerPool(server.ctx, wpLog)
 	if err != nil {
 		return nil, err
 	}
