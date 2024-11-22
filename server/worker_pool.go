@@ -42,6 +42,11 @@ func NewWorkerPool(ctx context.Context, size int,
 func (wp *WorkerPool) Start() {
 	go func() {
 		for task := range wp.tasks {
+			if task == nil {
+				wp.log.Info("worker pool has been close ...")
+				return
+			}
+
 			err := ants.Submit(func() {
 				wp.wg.Add(1)
 				defer wp.wg.Done()
@@ -59,6 +64,7 @@ func (wp *WorkerPool) Start() {
 func (wp *WorkerPool) Stop() {
 	wp.cancel()
 	wp.wg.Wait()
+	close(wp.tasks)
 	wp.stopped = true
 }
 
